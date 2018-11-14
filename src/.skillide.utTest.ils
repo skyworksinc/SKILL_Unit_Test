@@ -1,0 +1,58 @@
+/*****************************************************************
+  *                                                               *
+  *                     Unittest Framework                        *
+  *                                                               *
+  *   A unit testing framework that allows class-based unit       *
+  *    tests.                                                     *
+  *                                                               *
+  *  TODO: Add option to run file-based unit tests where each     *
+  *   function is a test.                                         *
+  *                                                               *
+  *****************************************************************/
+defclass( utUnitTest
+	()
+	()
+	)
+
+utTest = let(()
+	; Create a new unittest class instance with the given name.
+	procedure( newClassInstance(name)
+		defclass( name
+			(utUnitTest)
+			()
+		)
+		makeInstance(className(findClass(name)))
+	)
+
+	; Run all test methods
+	; A test method is any method that starts with test_
+	; The test method
+	defmethod( run ((obj utUnitTest)) let((test_methods (pass 't) (methodCnt 0))
+		test_methods = getGFbyClass(className(classOf(obj)))
+		foreach( test test_methods
+			when((strlen(symbolToString(test)) > 4) and (strcmp(substring(car(test_methods) 1 5) "test_")==0)
+				pass = eval(list(test obj))
+				methodCnt++
+			)
+		)
+		when(methodCnt == 0
+			warn("The %s class has no test methods!" className(obj))
+		)
+		when(pass
+			printf("All Tests Pass for %s\n" className(obj))
+			printf("Ran %d test methods\n" methodCnt)
+		)
+	))
+	; Asserts that the statement is true
+	defmethod( assertTrue ((obg utUnitTest) val) let(()
+		if(not(val) then
+			printf("Error: asserTrue failed" )
+			nil
+		else
+			't
+		)
+	))
+	list(nil 'newClassInstance newClassInstance
+			 'run run
+			 'assertTrue assertTrue)
+)
