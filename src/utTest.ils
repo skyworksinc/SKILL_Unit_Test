@@ -13,46 +13,96 @@ defclass( utUnitTest
 	()
 	()
 	)
+defgeneric(utAssertTrue (obj val) 
+	error( "Subclass responsibility\n" ))
+defgeneric(utRun (obj) 
+	error( "Subclass responsibility\n" ))
+defgeneric(utRunDir (obj path) 
+	error( "Subclass responsibility\n" ))
 
 utTest = let(()
-	; Create a new unittest class instance with the given name.
-	procedure( newClassInstance(name)
-		defclass( name
-			(utUnitTest)
-			()
-		)
-		makeInstance(className(findClass(name)))
-	)
 
-	; Run all test methods
-	; A test method is any method that starts with test_
-	; The test method
-	defmethod( run ((obj utUnitTest)) let((test_methods (pass 't) (methodCnt 0))
-		test_methods = getGFbyClass(className(classOf(obj)))
-		foreach( test test_methods
-			when((strlen(symbolToString(test)) > 4) and (strcmp(substring(car(test_methods) 1 5) "test_")==0)
-				pass = eval(list(test obj))
-				methodCnt++
-			)
-		)
-		when(methodCnt == 0
-			warn("The %s class has no test methods!" className(obj))
-		)
-		when(pass
-			printf("All Tests Pass for %s\n" className(obj))
-			printf("Ran %d test methods\n" methodCnt)
-		)
-	))
-	; Asserts that the statement is true
-	defmethod( assertTrue ((obg utUnitTest) val) let(()
-		if(not(val) then
-			printf("Error: asserTrue failed" )
-			nil
-		else
-			't
-		)
-	))
-	list(nil 'newClassInstance newClassInstance
-			 'run run
-			 'assertTrue assertTrue)
+; Create a new unittest class instance with the given name.
+procedure( newClassInstance(name)
+	defclass( name
+		(utUnitTest)
+		()
+	)
+	makeInstance(className(findClass(name)))
 )
+
+; Run all test methods
+; A test method is any method that starts with test_
+; The test method
+defmethod( utRun ((obj utUnitTest)) let((test_methods (pass 't) (methodCnt 0))
+	test_methods = getGFbyClass(className(classOf(obj)))
+	foreach( test test_methods
+		when((strlen(symbolToString(test)) > 4) && (strcmp(substring(car(test_methods) 1 5) "test_")==0)
+			pass = eval(list(test obj))
+			methodCnt++
+		)
+	)
+	when(methodCnt == 0
+		warn("The %s class has no test methods!" className(obj))
+	)
+	when(pass
+		printf("All Tests Pass for %s\n" className(obj))
+		printf("Ran %d test methods\n" methodCnt)
+	)
+))
+
+; Asserts that the statement is true
+defmethod( utAssertTrue ((_obj utUnitTest) val) let(()
+	if(not(val) then
+		printf("Error: assertTrue failed" )
+		nil
+	else
+		't
+	)
+))
+	
+list(nil 
+	'newClassInstance newClassInstance
+	'utRun utRun
+	'utAssertTrue utAssertTrue)
+)
+
+;; assertTest
+	;;  https://community.cadence.com/cadence_blogs_8/b/cic/posts/skill-for-the-skilled-simple-testing-macros
+	;; ARGUMENTS:
+	;;   expr - an expression to evaluate, asserting that it does not return nil
+	;;   ?ident ident - specifies an optional identifier which will be printed with [%L] in
+	;;                     the output if the assertion fails.  This will help you identify the
+	;;                     exact assertion that failed when scanning a testing log file.
+	;;   printf_style_args - additional printed information which will be output if the
+	;;                     assertion fails.
+(defmacro utAssertTest (expr @key ident @rest printf_style_args)
+  	(if (atom expr)
+      `(assert ,expr)
+      (let ((extra (if printf_style_args
+                       `(strcat "\n" (sprintf nil ,@printf_style_args))
+                       "")))
+        (destructuringBind (operator @rest operands) expr
+          (letseq ((vars (foreach mapcar _operand operands
+                           (gensym)))
+                   (bindings (foreach mapcar (var operand) vars operands
+                               (list var operand)))
+                   (assertion `(,operator ,@vars))
+                   (errors (foreach mapcar (var operand) vars operands
+                             `(sprintf nil "%L\n  --> %L" ',operand ,var))))
+            `(let ,bindings
+               (unless ,assertion
+                 (error "%s%s%s"
+                        (if ',ident
+                            (sprintf nil "[%L] " ,ident)
+                            "")
+                        (buildString (list ,@errors
+                                           (sprintf nil "FAILED ASSERTION: %L" ',expr))
+                                     "\n")
+                        ,extra))))))))
+; assertFail
+;
+defmacro(utAssertFail (expression)
+	`(assert (not (errset ,expression))
+		"EXPECTING FAILURE: %L\n"
+		',expression))
