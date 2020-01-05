@@ -11,14 +11,19 @@
   *****************************************************************/
 defclass( utUnitTest
 	()
-	()
+	((pass))
 	)
 defgeneric(utAssertTrue (obj val) 
 	error( "Subclass responsibility\n" ))
-defgeneric(utRun (obj) 
+defgeneric(utRun (obj  @key verbose) 
 	error( "Subclass responsibility\n" ))
 defgeneric(utRunDir (obj path) 
 	error( "Subclass responsibility\n" ))
+
+defclass( utSuite
+	()
+	((pass))
+	)
 
 utTest = let(()
 
@@ -33,28 +38,75 @@ procedure( newClassInstance(name)
 
 ; Run all test methods
 ; A test method is any method that starts with test_
-; The test method
-defmethod( utRun ((obj utUnitTest)) let((test_methods (pass 't) (methodCnt 0))
+defmethod( utRun ((obj utUnitTest) @key (verbose t)) let((test_methods  (methodCnt 0))	
+	printf("\nRunning %s\n" classOf(obj))
+	obj->pass = t
 	test_methods = getGFbyClass(className(classOf(obj)))
 	foreach( test test_methods
 		when((strlen(symbolToString(test)) > 4) && (strcmp(substring(car(test_methods) 1 5) "test_")==0)
-			pass = eval(list(test obj))
+			when(verbose printf("Running Test: %s\n" test))
+			eval(list(test obj))
 			methodCnt++
 		)
 	)
 	when(methodCnt == 0
 		warn("The %s class has no test methods!" className(obj))
 	)
-	when(pass
+	when(obj->pass
 		printf("All Tests Pass for %s\n" className(obj))
 		printf("Ran %d test methods\n" methodCnt)
 	)
 ))
 
+procedure( newSuite()
+	makeInstance('utSuite)
+)
+
+
+; Run all test files in the folder path given
+;  A test file is any file with a "test_" prefix
+; Args:
+;  Path: The path to a folder containing the test files to ran. (string or skyPath)
+defmethod( utSuiteRunByPath ((obj utSuite) path @key (verbose t)) let((test_files (fileCnt 0))	
+	path = skyPath->new(path)
+	test_files = setof( dir getDirFiles(path->Path) (length(dir)>4 && (substring(dir 1 5) == "test_")))
+	printf("\nRunning Suite of %d test files at:\n%s\n" length(test_files) path->Path)
+	
+	foreach( file test_files
+		loadi(strcat(path->Path "/" file))
+		fileCnt++
+	)
+	when(fileCnt == 0
+		warn("The folder has no test files!")
+	)
+	printf("Ran %d test files\n" fileCnt)
+	/*
+	when(obj->pass
+		printf("All test files Pass for %s\n" className(obj))
+		printf("Ran %d test methods\n" methodCnt)
+	)
+	*/
+))
+
+; Skips defining the test if the current project does not match the 
+;  project name specified
+; Replaces the call to defmethod for the test.
+defmacro(utDefTest (@key project name class @rest body) let((prj)
+	prj = SkyPrj->newFromEnv(nil)
+	prj = prj->Name
+	if(!project || project && prj == project then
+		`defmethod(,name ((testObj ,class)),@body)
+	else
+		warn("Test not defined: %s" name)
+		;`warn("Test not defined: %s" car(list(,@body)))
+	)
+))
+
 ; Asserts that the statement is true
-defmethod( utAssertTrue ((_obj utUnitTest) val) let(()
+defmethod( utAssertTrue ((obj utUnitTest) val) let(()
 	if(not(val) then
-		printf("Error: assertTrue failed" )
+		printf("Error: assertTrue failed\n" )
+		obj->pass = nil
 		nil
 	else
 		't
@@ -63,19 +115,20 @@ defmethod( utAssertTrue ((_obj utUnitTest) val) let(()
 	
 list(nil 
 	'newClassInstance newClassInstance
+	'newSuite newSuite
 	'utRun utRun
 	'utAssertTrue utAssertTrue)
 )
 
 ;; assertTest
-	;;  https://community.cadence.com/cadence_blogs_8/b/cic/posts/skill-for-the-skilled-simple-testing-macros
-	;; ARGUMENTS:
-	;;   expr - an expression to evaluate, asserting that it does not return nil
-	;;   ?ident ident - specifies an optional identifier which will be printed with [%L] in
-	;;                     the output if the assertion fails.  This will help you identify the
-	;;                     exact assertion that failed when scanning a testing log file.
-	;;   printf_style_args - additional printed information which will be output if the
-	;;                     assertion fails.
+;;  https://community.cadence.com/cadence_blogs_8/b/cic/posts/skill-for-the-skilled-simple-testing-macros
+;; ARGUMENTS:
+;;   expr - an expression to evaluate, asserting that it does not return nil
+;;   ?ident ident - specifies an optional identifier which will be printed with [%L] in
+;;                     the output if the assertion fails.  This will help you identify the
+;;                     exact assertion that failed when scanning a testing log file.
+;;   printf_style_args - additional printed information which will be output if the
+;;                     assertion fails.
 (defmacro utAssertTest (expr @key ident @rest printf_style_args)
   	(if (atom expr)
       `(assert ,expr)
