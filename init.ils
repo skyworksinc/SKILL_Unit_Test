@@ -1,3 +1,0 @@
-printf("Initializing SKILL_Unit_test\n")
-SkyVerLoad("utTest.ils"
-	strcat(getShellEnvVar("SKYVER_ROOT") "/src/SKILL_Unit_Test/src"))

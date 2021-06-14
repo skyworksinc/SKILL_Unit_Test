@@ -1,0 +1,24 @@
+{% set name = "skill-unit-test" %}
+{% set version = "0.0.1" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  - path: ../src
+    folder: src
+
+build:
+  number: 1
+
+requirements:
+  run:
+    - ids-skill
+
+about:
+  license: proprietary
+  summary: SKILL Unit Test Framework
+  description: |
+    A unit testing framework for the Cadence SKILL language.
+  dev_url: https://github.com/skyworksinc/SKILL_Unit_Test
