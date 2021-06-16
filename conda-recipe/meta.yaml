@@ -8,6 +8,7 @@ package:
 source:
   - path: ../src
     folder: src
+  - path: ../skill-unit-test.init.ils
 
 build:
   number: 1
