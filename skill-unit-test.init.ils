@@ -1,4 +1,4 @@
-printf("Initializing SKILL_Unit_test\n")
+printf("Initializing skill-unit-test\n")
 
 let((file_path dir_path)
 	file_path = simplifyFilename(get_filename(piport))
@@ -7,4 +7,4 @@ let((file_path dir_path)
 
 )
 
-printf("  Done, Initialized SKILL_Unit_test\n")
+printf("  Done, Initialized skill-unit-test\n")
