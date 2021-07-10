@@ -8,4 +8,4 @@ dependencies:
   - conda-build=3.21.4=py37h06a4308_0
   - ids-skill=1.0.13=0
   - python=3.7.10=h12debd9_4
-prefix: /prj/ids_dev/work_libs/maybert/dev-envs/skill-unit-test-dev
+prefix: /prj/ids_dev/work_libs/${USER}/skill-unit-test/envs/dev
