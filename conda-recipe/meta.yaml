@@ -19,7 +19,9 @@ requirements:
 
 about:
   home: https://github.com/skyworksinc/skill-unit-test
-  license: proprietary
+  license: "GNU Lesser General Public v3 (LGPLv3)"
+  license_family: LGPL
+  license_file: LICENSE
   summary: SKILL unit test framework
   description: |
     A unit testing framework for the Cadence SKILL language.
