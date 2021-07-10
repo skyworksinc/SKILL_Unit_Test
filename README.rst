@@ -1,4 +1,4 @@
-SKILL_Unit_Test
+SKILL Unit Test
 ===============
 
-A unit testing framework for the Cadence SKILL language
+A unit testing framework for the Cadence SKILL language.
