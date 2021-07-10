@@ -18,8 +18,9 @@ requirements:
     - ids-skill
 
 about:
+  home: https://github.com/skyworksinc/skill-unit-test
   license: proprietary
-  summary: SKILL Unit Test Framework
+  summary: SKILL unit test framework
   description: |
     A unit testing framework for the Cadence SKILL language.
-  dev_url: https://github.com/skyworksinc/SKILL_Unit_Test
+  dev_url: https://github.com/skyworksinc/skill-unit-test
